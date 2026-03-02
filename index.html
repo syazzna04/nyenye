@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Love Catcher 💖</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body, html{
+  width:100%;
+  height:100%;
+  font-family:'Poppins',sans-serif;
+  overflow:hidden;
+  background: linear-gradient(to bottom, #ffe6f0, #fff0f5);
+}
+
+/* Screens */
+.screen{
+  position:absolute;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transition:0.5s;
+}
+.hidden{opacity:0;pointer-events:none;}
+
+/* Boxes */
+.box{
+  background: rgba(255,255,255,0.85);
+  padding:25px;
+  border-radius:20px;
+  text-align:center;
+  box-shadow:0 0 25px #ff99cc;
+  width:90%;
+  max-width:350px;
+}
+
+h1{font-family:'Great Vibes';color:#ff3366;margin-bottom:15px;}
+
+input{
+  margin-top:10px;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ff99cc;
+  width:100%;
+  text-align:center;
+}
+
+button{
+  margin-top:15px;
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  background:#ff3366;
+  color:white;
+  font-family:'Poppins';
+  cursor:pointer;
+}
+button:hover{background:#ff6699;}
+
+/* Game Area */
+#gameArea{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  background: linear-gradient(to top, #ffe6f0, #fff0f5);
+  overflow:hidden;
+}
+
+/* Falling Hearts */
+.heart{
+  position:absolute;
+  font-size:40px;
+  cursor:pointer;
+  user-select:none;
+  z-index:5;
+  transition: transform 0.1s;
+}
+
+/* Score */
+#score{
+  position:absolute;
+  top:10px;
+  left:10px;
+  font-weight:bold;
+  font-size:20px;
+  color:#ff3366;
+  z-index:10;
+}
+
+/* Letter Screen */
+.letter{
+  background:white;
+  color:#ff0077;
+  width:90%;
+  max-width:400px;
+  height:90vh;
+  border-radius:20px;
+  padding:20px;
+  overflow-y:auto;
+  box-shadow:0 0 40px #ff99cc;
+  position:relative;
+}
+.letter h2{
+  font-family:'Great Vibes';
+  font-size:30px;
+  text-align:center;
+  margin-bottom:10px;
+}
+.letter p{
+  margin-bottom:15px;  /* spacing between paragraphs */
+  line-height:1.6;
+  font-size:16px;
+}
+.fade{opacity:0;animation:fadeIn 1.5s forwards;}
+@keyframes fadeIn{to{opacity:1;}}
+.finalBtn{
+  margin-top:15px;
+  background:#ff3366;
+}
+
+/* Floating sparkles & hearts */
+.sparkle{
+  position:absolute;
+  font-size:20px;
+  opacity:0.8;
+  animation:floatUp 4s linear forwards;
+  pointer-events:none;
+  z-index:5;
+}
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(1);}
+  100%{transform:translateY(-300px) scale(1.5);opacity:0;}
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD SCREEN -->
+<div class="screen" id="passwordScreen">
+  <div class="box">
+    <h1>Isi Detail Dulu 💖</h1>
+    <input type="text" id="playerName" placeholder="Your Name">
+    <input type="password" id="pass" placeholder="Our Official Date (DDMMYYYY)">
+    <button onclick="checkPass()">Continue</button>
+    <p id="error"></p>
+  </div>
+</div>
+
+<!-- INSTRUCTIONS -->
+<div class="screen hidden" id="instructionScreen">
+  <div class="box">
+    <h1>How to Play 💕</h1>
+    <p>Tap on the falling hearts anywhere on the screen 💖</p>
+    <p>Pink hearts = 1 point</p>
+    <p>Yellow hearts = 3 points</p>
+    <p>Catch 15 hearts to unlock my letter 💌</p>
+    <button onclick="startGameScreen()">Start Game</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen hidden" id="gameScreen">
+  <div id="gameArea">
+    <div id="score">Score: 0</div>
+  </div>
+</div>
+
+<!-- LETTER SCREEN -->
+<div class="screen hidden" id="letterScreen">
+  <div class="letter">
+    <h2>To My Cayangg ❤️</h2>
+    <div id="text"></div>
+    <button class="finalBtn" id="nextSection" style="display:none;">Next 💖</button>
+    <button class="finalBtn" id="finalBtn" style="display:none;" onclick="finalMessage()">Will You Stay With Me Forever? 💍</button>
+  </div>
+</div>
+
+<!-- AUDIO -->
+<audio id="bgm" loop><source src="brunomars.mp3" type="audio/mpeg"></audio>
+<audio id="pop" src="pop.mp3"></audio>
+
+<script>
+let score=0;
+const targetScore=15;
+const hearts=[];
+const gameArea=document.getElementById("gameArea");
+
+/* PASSWORD */
+function checkPass(){
+  if(document.getElementById("pass").value==="10122025"){
+    document.getElementById("passwordScreen").classList.add("hidden");
+    document.getElementById("instructionScreen").classList.remove("hidden");
+    document.getElementById("bgm").play();
+  }else{
+    document.getElementById("error").innerText="Wrong date💔";
+  }
+}
+
+/* START GAME */
+function startGameScreen(){
+  document.getElementById("instructionScreen").classList.add("hidden");
+  document.getElementById("gameScreen").classList.remove("hidden");
+  document.getElementById("bgm").play(); // start music
+  startGame();
+}
+
+/* SPAWN HEARTS */
+function spawnHeart(){
+  let heart=document.createElement("div");
+  heart.classList.add("heart");
+  heart.style.left=Math.random()*90+"%";
+  heart.style.top="-50px";
+  heart.dataset.type=Math.random()<0.2?"gold":"pink";
+  heart.innerText = heart.dataset.type==="gold"?"💛":"💖";
+  gameArea.appendChild(heart);
+  hearts.push(heart);
+
+  // falling animation
+  let fall = setInterval(()=>{
+    heart.style.top = (heart.offsetTop+3) + "px";
+    if(heart.offsetTop>window.innerHeight){
+      heart.remove(); clearInterval(fall);
+    }
+  },20);
+
+  heart.addEventListener("click", ()=>{
+    score += (heart.dataset.type==="gold") ? 3 : 1; // all hearts same pop sound
+    document.getElementById("pop").play();
+    document.getElementById("score").innerText="Score: "+score;
+    heart.remove();
+    if(score>=targetScore){endGame();}
+  });
+}
+
+/* GAME LOOP */
+let spawnInterval;
+function startGame(){
+  spawnInterval=setInterval(spawnHeart,600);
+}
+
+/* END GAME */
+function endGame(){
+  clearInterval(spawnInterval);
+  hearts.forEach(h=>h.remove());
+  document.getElementById("gameScreen").classList.add("hidden");
+  document.getElementById("letterScreen").classList.remove("hidden");
+  currentSection=0;
+  showSection();
+}
+
+/* LETTER SECTIONS */
+const sections = [
+[
+"To My Cayangg❤️ that I chose without hesitation,",
+"",
+"I don't think you fully understand what it took for me to walk up to you the first time. I am not usually the brave one. I get shy and I always rehearse conversations in my head and still say the wrong thing.",
+"",
+"But with you it felt different."
+],
+[
+"I saw you and something in me decided that staying quiet would hurt more than risking everything. So I put my shyness aside. . I flirted more directly than I ever have. I started conversations about the most random things just to keep you talking. I made it obvious because for once I did not want to hide what I felt.",
+"",
+"I risked it all for you.",
+"",
+"I risked my pride.",
+"I risked rejection.",
+"I risked looking foolish.",
+"I risked caring too much."
+],
+[
+"And I would do it again.",
+"",
+"Because you felt like my blue moon. Rare. The kind of person that does not come around twice. I knew if I let fear win I would regret it for the rest of my life. So I chose courage. I chose you.",
+"",
+"Do I regret being that bold version of myself? Not even for a second. That was the most honest I have ever been with my heart. That was me loving without holding back."
+],
+[
+"If loving you means risking it all then I will keep choosing that risk.",
+"",
+"Not because it is easy.",
+"Not because it is safe.",
+"But because you are worth it.",
+"",
+"You were never just a random crush to me. You were a decision. A once in a lifetime kind of chance.",
+"",
+"And I am so glad I took it."
+]
+];
+
+let currentSection=0;
+function showSection(){
+  const textDiv=document.getElementById("text");
+  textDiv.innerHTML="";
+  const nextBtn=document.getElementById("nextSection");
+  nextBtn.style.display="none";
+
+  const lines=sections[currentSection];
+  let i=0;
+  function showLine(){
+    if(i<lines.length){
+      let p=document.createElement("p");
+      p.className="fade";
+      p.innerText=lines[i];
+      textDiv.appendChild(p);
+
+      // floating sparkles (visual only)
+      let sparkleDiv=document.createElement("div");
+      sparkleDiv.className="sparkle";
+      sparkleDiv.innerText=Math.random()<0.5?"💖":"✨";
+      sparkleDiv.style.left=Math.random()*80+"%";
+      textDiv.appendChild(sparkleDiv);
+      setTimeout(()=>sparkleDiv.remove(),4000);
+
+      i++;
+      setTimeout(showLine,1500);
+    }else{
+      if(currentSection<sections.length-1){
+        nextBtn.style.display="block";
+      }else{
+        document.getElementById("finalBtn").style.display="block";
+      }
+    }
+  }
+  showLine();
+}
+
+document.getElementById("nextSection").addEventListener("click",()=>{
+  currentSection++;
+  showSection();
+});
+
+/* FINAL MESSAGE */
+function finalMessage(){
+  let name=document.getElementById("playerName").value || "My Love";
+  alert(name+" — Top Survivor of My Heart 💖\nI choose you. Always.");
+}
+</script>
+
+</body>
+</html>
